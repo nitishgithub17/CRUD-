@@ -1,0 +1,119 @@
+## Create BAL.cs
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+
+
+public class BAL
+{
+    private string _empname;
+    private string _empsalary;
+
+    public string EmpName
+    {
+        get { return _empname; }
+        set { _empname = value; }
+    }
+
+    public string EmpSalary
+    {
+        get { return _empsalary; }
+        set { _empsalary = value; }
+    }  
+    
+	public BAL()
+	{
+	}
+
+    string conStr = ConfigurationManager.ConnectionStrings["DBCon"].ConnectionString;
+
+    public string Insert()
+    {
+        using (SqlConnection sqlcon = new SqlConnection(conStr))
+        {
+            SqlCommand sqlcmd = new SqlCommand("spInsertEmp", sqlcon);
+            sqlcmd.CommandType = CommandType.StoredProcedure;
+            sqlcmd.Parameters.AddWithValue("@name", EmpName);
+            sqlcmd.Parameters.AddWithValue("@salary", EmpSalary);
+
+            sqlcon.Open();
+            int count = sqlcmd.ExecuteNonQuery();
+
+            if (count > 0)
+                return "PASS";
+            else
+                return "FAIL";
+        }
+    }
+
+    public string Update()
+    {
+        using (SqlConnection sqlcon = new SqlConnection(conStr))
+        {
+            SqlCommand cmd = new SqlCommand("spUpdateEmp", sqlcon);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@name", EmpName);
+            cmd.Parameters.AddWithValue("@salary", EmpSalary);
+
+            sqlcon.Open();
+            int count = cmd.ExecuteNonQuery();
+            sqlcon.Close();
+
+            if (count > 0)
+                return "PASS";
+            else
+                return "FAIL";
+        }
+    }
+
+    public List<BAL> Select(int id)
+    {
+        using (SqlConnection sqlcon = new SqlConnection(conStr))
+        {
+            SqlCommand cmd = new SqlCommand("spSelectEmp", sqlcon);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@id", id);
+
+            sqlcon.Open();
+            SqlDataReader dr = cmd.ExecuteReader();
+
+            List<BAL> lstbal = new List<BAL>();
+            while (dr.Read())
+            {
+                BAL bal = new BAL
+                {
+                    EmpName = dr["EmpName"].ToString(),
+                    EmpSalary = dr["EmpSalary"].ToString()
+                };
+
+                lstbal.Add(bal);
+            }
+
+            return lstbal;
+        }
+    }
+
+    public string Delete(int id)
+    {
+        using (SqlConnection sqlcon = new SqlConnection(conStr))
+        {
+            SqlCommand cmd = new SqlCommand("spDeleteEmp", sqlcon);
+            cmd.CommandType = CommandType.StoredProcedure;
+            cmd.Parameters.AddWithValue("@id", id);
+
+            sqlcon.Open();
+            int count = cmd.ExecuteNonQuery();
+            sqlcon.Close();
+
+            if (count > 0)
+                return "PASS";
+            else
+                return "FAIL";
+        }
+    }
+}
